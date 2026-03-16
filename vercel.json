@@ -6,13 +6,8 @@
     }
   },
   "routes": [
-    {
-      "src": "/gate",
-      "dest": "/api/gate.php"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/dashboard.php"
-    }
+    { "src": "/us.php", "dest": "api/us.php" },
+    { "src": "/index.php", "dest": "api/index.php" },
+    { "src": "/", "dest": "api/index.php" }
   ]
 }
