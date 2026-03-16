@@ -1,18 +1,18 @@
 {
   "functions": {
-    "*.php": {
+    "api/*.php": {
       "runtime": "vercel-php@0.7.1",
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "routes": [
     {
-      "src": "/us.php",
-      "dest": "/us.php"
+      "src": "/gate",
+      "dest": "/api/gate.php"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.php"
+      "dest": "/api/dashboard.php"
     }
   ]
 }
