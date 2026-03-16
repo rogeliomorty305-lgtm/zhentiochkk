@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.7.1",
+      "maxDuration": 30
+    },
+    "*.php": {
+      "runtime": "vercel-php@0.7.1",
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/us.php",
+      "dest": "/us.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.php"
+    }
+  ]
+}
